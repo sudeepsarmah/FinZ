@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "MASTRA_TELEMETRY_DISABLED=1 next dev --hostname 0.0.0.0 --port 47291",
-    "build": "MASTRA_TELEMETRY_DISABLED=1 next build",
-    "start": "MASTRA_TELEMETRY_DISABLED=1 next start --hostname 0.0.0.0 --port 47291",
+    "dev": "next dev --hostname 0.0.0.0 --port 47291",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0 --port 47291",
     "lint": "eslint"
   },
   "dependencies": {

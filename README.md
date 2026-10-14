@@ -27,11 +27,23 @@ npm run dev
 
 Open [http://localhost:47291](http://localhost:47291). The dev server binds `0.0.0.0:47291`.
 
-`gemma3:1b` was the first try. It parsed a matcha note, then invented a purchase when asked for a mood. `gemma3:4b` stays on the entries you actually logged, which is the bar. It wants a few gigabytes of RAM. If that is too tight, pull the smaller tag and point FinZ at it:
+`gemma3:1b` was the first try. It parsed a matcha note, then invented a purchase when asked for a mood. `gemma3:4b` stays on the entries you actually logged, which is the bar. It wants a few gigabytes of RAM. If that is too tight, pull the smaller tag and point FinZ at it. `npm run dev` works in Command Prompt and Git Bash. The optional model switch does not, so set it the way your shell expects.
 
 ```bash
 ollama pull gemma3:1b
+```
+
+Git Bash:
+
+```bash
 OLLAMA_MODEL=gemma3:1b npm run dev
+```
+
+Command Prompt:
+
+```bat
+set OLLAMA_MODEL=gemma3:1b
+npm run dev
 ```
 
 ## What stays on-device
