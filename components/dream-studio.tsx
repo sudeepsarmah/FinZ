@@ -72,7 +72,7 @@ export function DreamStudio({ id }: { id: string }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dreamId }),
-        signal: AbortSignal.timeout(90_000),
+        signal: AbortSignal.timeout(150_000),
       });
       if (!response.ok) {
         setError(await errorMessage(response, "Gemma stalled. Nothing left the laptop."));

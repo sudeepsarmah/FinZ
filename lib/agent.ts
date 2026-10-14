@@ -109,36 +109,44 @@ body is exactly two sentences.
 Sentence 1 names a real entry from the list using its label and dollar amount, without scolding.
 Sentence 2 names the dream "${input.dreamName}" and why it is still there.
 If there are no entries, sentence 1 says the desk is still blank and does not invent a purchase.
-No advice. No "you should". No budgets. No shame.`;
+No advice. No "you should". No budgets. No shame.
+Income is not a purchase. Do not describe a paycheck as if it was spent on the dream.`;
 
   let reflection = normalizeReflection(
     await askJson(
       prompt,
-      'Return one JSON object with keys title and body. body is exactly two sentences.',
+      "Return one JSON object with keys title and body. body is exactly two sentences.",
       0.6,
       220,
     ),
   );
 
-  const haystack = `${reflection.title} ${reflection.body}`.toLowerCase();
-  const mentionsDream = haystack.includes(input.dreamName.toLowerCase());
-  const labels = input.entries.map((entry) => entry.label.toLowerCase());
-  const mentionsEntry =
-    input.entries.length === 0 || labels.some((label) => haystack.includes(label));
+  const problem = reflectionProblem(reflection, input.dreamName, input.entries);
+  if (problem) {
+    const anchor = input.entries[0];
+    reflection = normalizeReflection(
+      await askJson(
+        `${prompt}
 
-  if (!mentionsDream || !mentionsEntry) {
-    const repair = await askJson(
-      `${prompt}
-
-Your last reply missed the assignment. Use the dream name "${input.dreamName}" exactly.
-${input.entries[0] ? `Name this entry: ${input.entries[0].label} ${formatMoney(input.entries[0].amountCents)}.` : "There are no entries. Do not invent one."}
-Last reply title: ${reflection.title}
-Last reply body: ${reflection.body}`,
-      'Return one JSON object with keys title and body.',
-      0.4,
-      220,
+Your last reply failed this check: ${problem}
+Last title: ${reflection.title}
+Last body: ${reflection.body}
+Rewrite it.
+The title must not be only "${input.dreamName}".
+The body must contain the exact dream name "${input.dreamName}".
+${
+  anchor
+    ? `Sentence 1 must contain the exact label "${anchor.label}" and the amount ${formatMoney(anchor.amountCents)}. That entry is ${anchor.direction === "in" ? "money in, not a purchase" : "money out"}.`
+    : "There are no entries. Do not invent a purchase or a dollar amount."
+}
+Do not mention any dollar amount that is not in the entries list.`,
+        "Return one JSON object with keys title and body.",
+        0.2,
+        220,
+      ),
     );
-    reflection = normalizeReflection(repair);
+    const again = reflectionProblem(reflection, input.dreamName, input.entries);
+    if (again) throw new Error(`Reflection failed the check: ${again}`);
   }
 
   return reflection;
@@ -173,15 +181,38 @@ Never name a ticker or a fund product.
 
 JSON keys: emergencyPercent, cashPercent, indexPercent, headline, because.
 headline is one short line.
-because is two sentences that name ${input.focusDream} and the timeline.`;
+because is two sentences that name ${input.focusDream} and the timeline.
 
-  const value = await askJson(
-    prompt,
-    "Return one JSON object with keys emergencyPercent, cashPercent, indexPercent, headline, because. Percents are numbers.",
-    0.3,
-    260,
+Example for a this-year dream, which you should treat as a shape to copy and then adjust, not as this person's numbers:
+{"emergencyPercent":40,"cashPercent":35,"indexPercent":25,"headline":"Cash stays louder than the index","because":"Japan with my sister is this year, so the emergency buffer and cash outweigh a broad index fund. The index is still in the sketch, just not the main character."}`;
+
+  const hint =
+    "Return one JSON object. emergencyPercent, cashPercent, and indexPercent are integers that sum to 100. If any dream is this year, emergencyPercent + cashPercent must be greater than indexPercent. because must include the dream name.";
+
+  let allocation = normalizeAllocation(
+    await askJson(prompt, hint, 0.3, 280),
   );
-  return normalizeAllocation(value);
+  const problem = allocationProblem(allocation, input.dreams, input.profile.risk, input.focusDream);
+  if (problem) {
+    allocation = normalizeAllocation(
+      await askJson(
+        `${prompt}
+
+Your last sketch failed this check: ${problem}
+Last percents: emergency ${allocation.emergencyPercent}, cash ${allocation.cashPercent}, index ${allocation.indexPercent}.
+Recompute the three percents so the check passes. Still no tickers.`,
+        hint,
+        0.2,
+        260,
+      ),
+    );
+    const again = allocationProblem(allocation, input.dreams, input.profile.risk, input.focusDream);
+    if (again) {
+      console.error("allocation rejected", allocation, again);
+      throw new Error(`Allocation failed the check: ${again}`);
+    }
+  }
+  return allocation;
 }
 
 async function assertModel() {
@@ -222,6 +253,7 @@ async function askJson(
             options: {
               temperature,
               num_predict: maxOutputTokens,
+              num_ctx: 2048,
             },
           },
         },
@@ -283,6 +315,75 @@ function normalizeAllocation(value: unknown): Allocation {
   const because = firstSentences(stripProducts(cleanProse(parsed.because ?? "")), 3);
   if (!headline || !because) throw new Error("The sketch came back without a reason.");
   return { emergencyPercent, cashPercent, indexPercent, headline, because };
+}
+
+function mentionsName(text: string, name: string) {
+  const haystack = text.toLowerCase();
+  const needle = name.toLowerCase().trim();
+  if (haystack.includes(needle)) return true;
+  const skip = new Set(["with", "this", "that", "your", "from", "into", "about", "have"]);
+  const words = needle
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length > 3 && !skip.has(word));
+  return words.length > 0 && words.every((word) => haystack.includes(word));
+}
+
+function reflectionProblem(reflection: Reflection, dreamName: string, entries: Entry[]) {
+  const haystack = `${reflection.title} ${reflection.body}`;
+  if (reflection.title.trim().toLowerCase() === dreamName.trim().toLowerCase()) {
+    return "The title is only the dream name.";
+  }
+  if (!mentionsName(haystack, dreamName)) {
+    return `The dream "${dreamName}" is missing.`;
+  }
+  if (entries.length > 0) {
+    const mentioned = entries.some((entry) =>
+      haystack.toLowerCase().includes(entry.label.toLowerCase()),
+    );
+    if (!mentioned) {
+      return `None of these labels appear: ${entries.map((entry) => entry.label).join(" | ")}.`;
+    }
+  }
+  const allowed = new Set(
+    entries.map((entry) => formatMoney(entry.amountCents).replace(/[$,]/g, "")),
+  );
+  const mentionedAmounts = reflection.body.match(/\$[\d,]+(?:\.\d+)?/g) ?? [];
+  for (const amount of mentionedAmounts) {
+    const digits = amount.replace(/[$,]/g, "");
+    if (!allowed.has(digits)) {
+      return `${amount} is not an amount from the entries.`;
+    }
+  }
+  return null;
+}
+
+function allocationProblem(
+  allocation: Allocation,
+  dreams: Array<{ name: string; timeline: string }>,
+  risk: Profile["risk"],
+  focusDream: string,
+) {
+  const safe = allocation.emergencyPercent + allocation.cashPercent;
+  if (
+    dreams.some((dream) => dream.timeline === "this year") &&
+    allocation.indexPercent >= safe
+  ) {
+    return "A this-year dream needs emergency plus cash to be greater than the index percent.";
+  }
+  if (
+    risk === "steady" &&
+    allocation.indexPercent >= allocation.emergencyPercent &&
+    allocation.indexPercent >= allocation.cashPercent
+  ) {
+    return "Steady risk means the index is not the biggest bucket.";
+  }
+  if (risk === "game" && allocation.emergencyPercent < 15) {
+    return "Keep the emergency buffer at 15 percent or more.";
+  }
+  if (!mentionsName(allocation.because, focusDream)) {
+    return `The because text must mention "${focusDream}".`;
+  }
+  return null;
 }
 
 function normalizePercents(emergency: number, cash: number, index: number) {

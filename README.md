@@ -6,10 +6,10 @@ A local-first money desk for the first real paycheck. Dreams and feelings up fro
 
 You need Node.js 22 or newer (FinZ uses the built-in `node:sqlite`) and [Ollama](https://ollama.com/download).
 
-Pull the model FinZ is built against:
+Pull the model FinZ runs here:
 
 ```bash
-ollama pull gemma3:1b
+ollama pull gemma3:4b
 ```
 
 If Ollama did not start a background service (common when systemd is not running), start it in another terminal:
@@ -27,11 +27,11 @@ npm run dev
 
 Open [http://localhost:47291](http://localhost:47291). The dev server binds `0.0.0.0:47291`.
 
-`gemma3:1b` is the default because it answers on a normal laptop and still follows a tight prompt. If the reflections feel thin and you have the RAM, pull a thicker Gemma and point FinZ at it:
+`gemma3:1b` was the first try. It parsed a matcha note, then invented a purchase when asked for a mood. `gemma3:4b` stays on the entries you actually logged, which is the bar. It wants a few gigabytes of RAM. If that is too tight, pull the smaller tag and point FinZ at it:
 
 ```bash
-ollama pull gemma3:4b
-OLLAMA_MODEL=gemma3:4b npm run dev
+ollama pull gemma3:1b
+OLLAMA_MODEL=gemma3:1b npm run dev
 ```
 
 ## What stays on-device
@@ -48,7 +48,7 @@ FinZ is a Hacktoberfest Side Hustle: something a person would actually pay for, 
 
 Privacy. Income, expenses, dreams, and the notes attached to them live in SQLite on the laptop. The Mastra agent calls Gemma through Ollama on localhost. Spending is not pasted into a chatbot on a server you do not control.
 
-$0 inference. After `ollama pull gemma3:1b`, every parse, money-mood reflection, and starter allocation runs on the machine. No token meter and no API key.
+$0 inference. After `ollama pull gemma3:4b`, every parse, money-mood reflection, and starter allocation runs on the machine. No token meter and no API key.
 
 Swap the weights. Set `OLLAMA_MODEL` to another Gemma tag you have pulled and restart. The agent harness stays. The closed model is not load-bearing.
 

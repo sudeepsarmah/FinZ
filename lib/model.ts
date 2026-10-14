@@ -1,4 +1,4 @@
-export const MODEL_ID = process.env.OLLAMA_MODEL ?? "gemma3:1b";
+export const MODEL_ID = process.env.OLLAMA_MODEL ?? "gemma3:4b";
 export const OLLAMA_HOST = (
   process.env.OLLAMA_HOST ?? "http://127.0.0.1:11434"
 ).replace(/\/$/, "");

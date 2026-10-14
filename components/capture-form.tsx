@@ -79,7 +79,7 @@ export function CaptureForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ note: text }),
-        signal: AbortSignal.timeout(90_000),
+        signal: AbortSignal.timeout(150_000),
       });
       if (!response.ok) {
         setError(await errorMessage(response, "Gemma couldn't read that."));
