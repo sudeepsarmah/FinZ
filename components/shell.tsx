@@ -2,15 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+
+const TodayContext = createContext("On this laptop");
+
+export function ShellDate({
+  today,
+  children,
+}: {
+  today: string;
+  children: React.ReactNode;
+}) {
+  return <TodayContext.Provider value={today}>{children}</TodayContext.Provider>;
+}
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const today = new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date());
+  const today = useContext(TodayContext);
   const [model, setModel] = useState<{ id: string; online: boolean } | null>(null);
 
   useEffect(() => {

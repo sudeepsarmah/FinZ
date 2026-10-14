@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StatusBlock } from "@/components/status-block";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useSummary, errorMessage } from "@/components/use-summary";
 import { cadenceMeta, emotionMeta } from "@/lib/catalog";
 import { formatMoney } from "@/lib/money";
@@ -130,21 +131,20 @@ export function DashboardView() {
               >
                 {paycheckBusy ? "Writing it down…" : "Drop in this paycheck"}
               </Button>
-              <Button
-                variant="outline"
-                className="h-11 border-2 px-4 text-base"
-                render={<Link href="/capture" />}
+              <Link
+                href="/capture"
+                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "h-11 border-2 px-4 text-base")}
               >
                 Log a note
-              </Button>
+              </Link>
             </div>
           ) : (
-            <Button
-              className="mt-4 h-11 px-4 text-base"
-              render={<Link href="/capture" />}
+            <Link
+              href="/capture"
+              className={cn(buttonVariants({ size: "lg" }), "mt-4 h-11 px-4 text-base")}
             >
               Log another note
-            </Button>
+            </Link>
           )}
           {actionError ? (
             <p role="alert" className="mt-3 text-sm text-stamp">

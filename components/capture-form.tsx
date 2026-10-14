@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Field, fieldClass } from "@/components/field";
 import { StatusBlock } from "@/components/status-block";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useSlow } from "@/components/use-slow";
@@ -79,7 +80,7 @@ export function CaptureForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ note: text }),
-        signal: AbortSignal.timeout(150_000),
+        signal: AbortSignal.timeout(240_000),
       });
       if (!response.ok) {
         setError(await errorMessage(response, "Gemma couldn't read that."));
@@ -174,9 +175,12 @@ export function CaptureForm() {
           <Button className="h-11 px-4 text-base" onClick={reset}>
             Log another
           </Button>
-          <Button variant="outline" className="h-11 border-2 px-4 text-base" render={<Link href="/" />}>
+          <Link
+            href="/"
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "h-11 border-2 px-4 text-base")}
+          >
             Back to the desk
-          </Button>
+          </Link>
         </div>
       </section>
     );

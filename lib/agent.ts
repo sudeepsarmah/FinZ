@@ -245,7 +245,7 @@ async function askJson(
         modelSettings: {
           temperature,
           maxOutputTokens,
-          timeout: { totalMs: 75_000, stepMs: 60_000 },
+          timeout: { totalMs: 180_000, stepMs: 150_000 },
         },
         providerOptions: {
           ollama: {

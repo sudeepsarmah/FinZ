@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Mono, Fraunces, Outfit } from "next/font/google";
+import { ShellDate } from "@/components/shell";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -17,6 +18,8 @@ const mono = DM_Mono({
   weight: ["400", "500"],
   variable: "--font-dm-mono",
 });
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: {
@@ -37,7 +40,17 @@ export default function RootLayout({
       lang="en"
       className={`${outfit.variable} ${fraunces.variable} ${mono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ShellDate
+          today={new Intl.DateTimeFormat("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          }).format(new Date())}
+        >
+          {children}
+        </ShellDate>
+      </body>
     </html>
   );
 }
