@@ -6,11 +6,12 @@ export function Guide() {
       <header>
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-stamp">Start here</p>
         <h1 className="mt-2 font-serif text-5xl leading-[0.95] tracking-tight sm:text-6xl">
-          Get Gemma running, then log a note.
+          Get Gemma running, then use the site.
         </h1>
         <p className="mt-4 text-lg leading-8">
-          You do not need to know what a model is. Ollama is a free app that keeps Gemma on your
-          computer. FinZ talks to that app. Nothing about your money is sent to a company&apos;s chatbot.
+          FinZ is a website. You do not install it, and you do not leave a terminal window open for
+          it. The only extra app on your computer is Ollama. That app holds Gemma, so a messy note
+          can be read on your machine instead of being sent to someone else&apos;s chatbot.
         </p>
       </header>
 
@@ -33,37 +34,39 @@ export function Guide() {
         </p>
         <pre className="overflow-x-auto border-2 border-ink bg-sheet p-4 font-mono text-sm">ollama pull gemma3:4b</pre>
         <p className="leading-7">
-          Wait until it says success. If your laptop is tight on memory, use <span className="font-mono">gemma3:1b</span> instead.
-          It is faster and thinner, and more likely to invent a purchase. 4B is the one FinZ is aimed at.
+          Wait until it says success. You can close that window afterward. If your laptop is tight on
+          memory, use <span className="font-mono">gemma3:1b</span> instead. It is faster and thinner,
+          and more likely to invent a purchase. 4B is the one FinZ is aimed at.
         </p>
       </section>
 
       <section className="grid gap-3">
-        <h2 className="font-serif text-3xl">3. Open FinZ</h2>
-        <p className="leading-7">In the FinZ folder, once:</p>
-        <pre className="overflow-x-auto border-2 border-ink bg-sheet p-4 font-mono text-sm">npm install</pre>
-        <p className="leading-7">Every time you want the desk:</p>
-        <pre className="overflow-x-auto border-2 border-ink bg-sheet p-4 font-mono text-sm">npm run dev</pre>
+        <h2 className="font-serif text-3xl">3. Use FinZ in the browser</h2>
         <p className="leading-7">
-          Then open{" "}
-          <Link href="/" className="underline decoration-stamp">
-            http://localhost:47291
-          </Link>
-          . Leave that terminal window open while you use the site. Closing it turns the desk off.
+          You are already on the site. Bookmark it and come back the same way you open any other
+          page. Ollama can keep running in the tray. You do not start FinZ from a folder, and you
+          do not run install commands to use the desk.
+        </p>
+        <p className="leading-7">
+          <Link href="/onboard" className="underline decoration-stamp">
+            Open the desk
+          </Link>{" "}
+          and tell it your name, what lands in your account, which currency you use, and one to
+          three dreams.
         </p>
       </section>
 
       <section className="grid gap-3">
-        <h2 className="font-serif text-3xl">4. Log something real</h2>
+        <h2 className="font-serif text-3xl">4. Log something from your day</h2>
         <ol className="grid list-decimal gap-2 pl-5 leading-7">
-          <li>Open the desk and tell it your name, take-home, currency, and one to three dreams.</li>
           <li>Choose Log a note.</li>
           <li>
             Type a messy line. <span className="font-mono">spe</span> offers <span className="font-mono">spent</span>.
             Press Tab to take it, or keep typing if you meant a different word.
           </li>
-          <li>Click Read it. Gemma fills amount, in or out, a short label, and a feeling.</li>
-          <li>Change anything it fumbled. Then put it on the desk.</li>
+          <li>Click Read it. Gemma fills the amount, whether money came in or went out, a short label, and a feeling.</li>
+          <li>Change anything it got wrong. Then put it on the desk.</li>
+          <li>Come back tomorrow and do the same. The desk keeps what you saved on this computer.</li>
         </ol>
         <p className="leading-7">
           A useful first note: <span className="font-mono">spent 200 on groceries</span> or{" "}
@@ -74,9 +77,9 @@ export function Guide() {
       <section className="grid gap-3">
         <h2 className="font-serif text-3xl">If the banner says Gemma is offline</h2>
         <p className="leading-7">
-          The desk still saves notes you type by hand. The reader just isn&apos;t awake. Open the Ollama
-          app again, or run <span className="font-mono">ollama serve</span> in a terminal, then refresh.
-          You only download the model once.
+          The site is still open. Only the reader is asleep. Click the Ollama llama in the tray, or
+          open Ollama from the Start menu, then refresh this page. You already downloaded the model.
+          You do not install FinZ again.
         </p>
       </section>
     </article>

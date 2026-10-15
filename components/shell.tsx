@@ -81,9 +81,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
             Gemma is offline, so the messy-note reader is napping. You can still
             type a note by hand.{" "}
             <Link href="/guide" className="underline decoration-stamp">
-              How to start it
-            </Link>
-            , then run <span className="font-mono">ollama pull {model.id}</span>.
+              Start Gemma
+            </Link>{" "}
+            on this computer, then refresh. The website itself stays open.
           </p>
         </div>
       ) : null}
