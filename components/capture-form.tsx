@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Field, fieldClass } from "@/components/field";
+import { NoteBox } from "@/components/note-box";
 import { StatusBlock } from "@/components/status-block";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSlow } from "@/components/use-slow";
 import { errorMessage } from "@/components/use-summary";
 import { EMOTIONS, type Direction, type Emotion } from "@/lib/catalog";
+import type { Currency } from "@/lib/currency";
 import { formatMoney } from "@/lib/money";
 import type { ParsedNote } from "@/lib/types";
 import { validateEntry } from "@/lib/validate";
@@ -32,13 +34,16 @@ export function CaptureForm() {
   const [busy, setBusy] = useState<"read" | "save" | null>(null);
   const slow = useSlow(busy === "read");
   const [saved, setSaved] = useState<ParsedNote | null>(null);
+  const [currency, setCurrency] = useState<Currency>("USD");
 
   useEffect(() => {
-    void fetch("/api/profile", { cache: "no-store" }).then((response) => {
+    void fetch("/api/profile", { cache: "no-store" }).then(async (response) => {
       if (response.status === 404) {
         router.replace("/onboard");
         return;
       }
+      const body = (await response.json()) as { profile?: { currency?: Currency } };
+      if (body.profile?.currency) setCurrency(body.profile.currency);
       setReady(true);
     });
   }, [router]);
@@ -165,7 +170,7 @@ export function CaptureForm() {
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-stamp">On the desk</p>
         <h1 className="mt-2 font-serif text-5xl leading-tight">Saved on this laptop.</h1>
         <p className="mt-4 font-serif text-3xl">
-          {saved.label} · {saved.direction === "out" ? "out" : "in"} · {formatMoney(Math.round(saved.amount * 100))}
+          {saved.label} · {saved.direction === "out" ? "out" : "in"} · {formatMoney(Math.round(saved.amount * 100), currency)}
         </p>
         <p className="mt-2 text-lg">{saved.note}</p>
         <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.14em]">
@@ -200,23 +205,13 @@ export function CaptureForm() {
 
       {phase === "compose" || phase === "review" ? (
         <div className="grid gap-3">
-          <Field
-            label="The note"
-            htmlFor="raw-note"
-            hint="Try: $14 matcha after a bad standup, felt like a treat"
-          >
-            <Textarea
+          <Field label="The note" htmlFor="raw-note">
+            <NoteBox
               id="raw-note"
-              className="min-h-32 rounded-sm border-2 bg-sheet px-3 py-3 text-lg"
               value={raw}
-              onChange={(event) => setRaw(event.target.value)}
-              onKeyDown={(event) => {
-                if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-                  event.preventDefault();
-                  void readNote();
-                }
-              }}
-              placeholder="$14 matcha after a bad standup, felt like a treat"
+              onChange={setRaw}
+              onSubmit={() => void readNote()}
+              placeholder="spent 200 on groceries"
             />
           </Field>
           <div className="flex flex-col gap-3 sm:flex-row">

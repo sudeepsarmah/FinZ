@@ -57,6 +57,7 @@ export function DreamStudio({ id }: { id: string }) {
     );
   }
 
+  const money = (cents: number) => formatMoney(cents, state.data.profile.currency);
   const pct =
     dream.targetCents <= 0
       ? 0
@@ -112,11 +113,11 @@ export function DreamStudio({ id }: { id: string }) {
           <div className="h-full bg-stamp" style={{ width: `${pct}%` }} />
         </div>
         <p className="mt-2 font-mono text-xs uppercase tracking-[0.14em]">
-          {formatMoney(dream.fundedCents)} of {formatMoney(dream.targetCents)} from leftover cash · {pct}%
+          {money(dream.fundedCents)} of {money(dream.targetCents)} from leftover cash · {pct}%
         </p>
         <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
           Risk comfort on the desk: {risk.label}. {risk.blurb} Take-home is{" "}
-          {formatMoney(state.data.profile.takeHomeCents)}.
+          {money(state.data.profile.takeHomeCents)}.
         </p>
         <Link
           href="/"
@@ -217,7 +218,7 @@ export function DreamStudio({ id }: { id: string }) {
               <li key={entry.id} className="border-b border-ink/25 py-3">
                 <p className="font-serif text-xl">
                   {entry.direction === "out" ? "−" : "+"}
-                  {formatMoney(entry.amountCents)} {entry.label}
+                  {money(entry.amountCents)} {entry.label}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {entry.note} · {emotionMeta(entry.emotion).label}

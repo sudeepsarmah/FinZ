@@ -1,10 +1,12 @@
 import type { Cadence, Direction, Emotion, Risk, Timeline } from "@/lib/catalog";
+import type { Currency } from "@/lib/currency";
 
 export type Profile = {
   name: string;
   takeHomeCents: number;
   cadence: Cadence;
   risk: Risk;
+  currency: Currency;
   createdAt: string;
 };
 

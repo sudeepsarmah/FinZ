@@ -17,7 +17,8 @@ export function getDb() {
         take_home_cents INTEGER NOT NULL,
         cadence TEXT NOT NULL,
         risk TEXT NOT NULL,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'USD'
       );
       CREATE TABLE IF NOT EXISTS dreams (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,6 +39,11 @@ export function getDb() {
         created_at TEXT NOT NULL
       );
     `);
+    const columns = db.prepare("PRAGMA table_info(profile)").all();
+    const hasCurrency = columns.some((column) => String(column.name) === "currency");
+    if (!hasCurrency) {
+      db.exec("ALTER TABLE profile ADD COLUMN currency TEXT NOT NULL DEFAULT 'USD'");
+    }
     globalForDb.finzDb = db;
   }
   return globalForDb.finzDb;

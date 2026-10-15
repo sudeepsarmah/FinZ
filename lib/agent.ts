@@ -121,7 +121,12 @@ Income is not a purchase. Do not describe a paycheck as if it was spent on the d
     ),
   );
 
-  const problem = reflectionProblem(reflection, input.dreamName, input.entries);
+  const problem = reflectionProblem(
+    reflection,
+    input.dreamName,
+    input.entries,
+    input.profile.currency,
+  );
   if (problem) {
     const anchor = input.entries[0];
     reflection = normalizeReflection(
@@ -136,7 +141,7 @@ The title must not be only "${input.dreamName}".
 The body must contain the exact dream name "${input.dreamName}".
 ${
   anchor
-    ? `Sentence 1 must contain the exact label "${anchor.label}" and the amount ${formatMoney(anchor.amountCents)}. That entry is ${anchor.direction === "in" ? "money in, not a purchase" : "money out"}.`
+    ? `Sentence 1 must contain the exact label "${anchor.label}" and the amount ${formatMoney(anchor.amountCents, input.profile.currency)}. That entry is ${anchor.direction === "in" ? "money in, not a purchase" : "money out"}.`
     : "There are no entries. Do not invent a purchase or a dollar amount."
 }
 Do not mention any dollar amount that is not in the entries list.`,
@@ -145,7 +150,12 @@ Do not mention any dollar amount that is not in the entries list.`,
         220,
       ),
     );
-    const again = reflectionProblem(reflection, input.dreamName, input.entries);
+    const again = reflectionProblem(
+      reflection,
+      input.dreamName,
+      input.entries,
+      input.profile.currency,
+    );
     if (again) throw new Error(`Reflection failed the check: ${again}`);
   }
 
@@ -161,13 +171,13 @@ export async function sketchAllocation(input: {
   const risk = riskMeta(input.profile.risk);
   const prompt = `Sketch a starter split for money this person might set aside later. Educational only.
 Person: ${input.profile.name}
-Take-home: ${formatMoney(input.profile.takeHomeCents)} ${cadenceMeta(input.profile.cadence).phrase}
+Take-home: ${formatMoney(input.profile.takeHomeCents, input.profile.currency)} ${cadenceMeta(input.profile.cadence).phrase}
 Risk comfort: ${input.profile.risk} — ${risk.label}. ${risk.blurb}
 Dreams:
 ${input.dreams
   .map(
     (dream) =>
-      `- ${dream.name} | target ${formatMoney(dream.targetCents)} | timeline ${dream.timeline} | why: ${dream.why}`,
+      `- ${dream.name} | target ${formatMoney(dream.targetCents, input.profile.currency)} | timeline ${dream.timeline} | why: ${dream.why}`,
   )
   .join("\n")}
 The dream they are looking at: ${input.focusDream}
@@ -328,7 +338,12 @@ function mentionsName(text: string, name: string) {
   return words.length > 0 && words.every((word) => haystack.includes(word));
 }
 
-function reflectionProblem(reflection: Reflection, dreamName: string, entries: Entry[]) {
+function reflectionProblem(
+  reflection: Reflection,
+  dreamName: string,
+  entries: Entry[],
+  currency: Profile["currency"],
+) {
   const haystack = `${reflection.title} ${reflection.body}`;
   if (reflection.title.trim().toLowerCase() === dreamName.trim().toLowerCase()) {
     return "The title is only the dream name.";
@@ -345,11 +360,12 @@ function reflectionProblem(reflection: Reflection, dreamName: string, entries: E
     }
   }
   const allowed = new Set(
-    entries.map((entry) => formatMoney(entry.amountCents).replace(/[$,]/g, "")),
+    entries.map((entry) => formatMoney(entry.amountCents, currency).replace(/[^\d.]/g, "")),
   );
-  const mentionedAmounts = reflection.body.match(/\$[\d,]+(?:\.\d+)?/g) ?? [];
+  const mentionedAmounts =
+    reflection.body.match(/(?:[$₹€£]|Rs\.?\s*)\d[\d,]*(?:\.\d+)?/g) ?? [];
   for (const amount of mentionedAmounts) {
-    const digits = amount.replace(/[$,]/g, "");
+    const digits = amount.replace(/[^\d.]/g, "");
     if (!allowed.has(digits)) {
       return `${amount} is not an amount from the entries.`;
     }
@@ -434,17 +450,17 @@ function describeDesk(
       : entries
           .map(
             (entry) =>
-              `- ${entry.direction.toUpperCase()} ${formatMoney(entry.amountCents)} ${entry.label} | ${emotionMeta(entry.emotion).label} | ${entry.note}`,
+              `- ${entry.direction.toUpperCase()} ${formatMoney(entry.amountCents, profile.currency)} ${entry.label} | ${emotionMeta(entry.emotion).label} | ${entry.note}`,
           )
           .join("\n");
   const dreamLines = dreams
     .map(
       (dream) =>
-        `- ${dream.name} | target ${formatMoney(dream.targetCents)} | ${dream.timeline} | ${dream.why}`,
+        `- ${dream.name} | target ${formatMoney(dream.targetCents, profile.currency)} | ${dream.timeline} | ${dream.why}`,
     )
     .join("\n");
   return `Name: ${profile.name}
-Take-home: ${formatMoney(profile.takeHomeCents)} ${cadenceMeta(profile.cadence).phrase}
+Take-home: ${formatMoney(profile.takeHomeCents, profile.currency)} ${cadenceMeta(profile.cadence).phrase}
 Risk: ${profile.risk}
 Dreams:
 ${dreamLines}

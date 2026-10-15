@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { errorMessage } from "@/components/use-summary";
+import { CurrencyPicker } from "@/components/currency-picker";
 import { CADENCES, RISKS, TIMELINES, type Risk, type Timeline } from "@/lib/catalog";
+import type { Currency } from "@/lib/currency";
 import { validateProfile } from "@/lib/validate";
 
 type DreamForm = {
@@ -30,6 +32,7 @@ export function OnboardForm() {
   const [ready, setReady] = useState(false);
   const [name, setName] = useState("");
   const [takeHome, setTakeHome] = useState("");
+  const [currency, setCurrency] = useState<Currency>("USD");
   const [cadence, setCadence] = useState<(typeof CADENCES)[number]["slug"]>("biweekly");
   const [risk, setRisk] = useState<Risk>("balanced");
   const [dreams, setDreams] = useState<DreamForm[]>([emptyDream()]);
@@ -68,6 +71,7 @@ export function OnboardForm() {
     const payload = {
       name,
       takeHome,
+      currency,
       cadence,
       risk,
       dreams: dreams.map((dream) => ({
@@ -132,6 +136,10 @@ export function OnboardForm() {
 
       <section className="grid gap-4">
         <SectionMark n="02" title="What actually hits the account?" />
+        <div className="grid gap-2">
+          <p className="font-mono text-[11px] uppercase tracking-[0.16em]">Currency</p>
+          <CurrencyPicker value={currency} onChange={setCurrency} />
+        </div>
         <Field
           label="Take-home pay"
           htmlFor="take-home"

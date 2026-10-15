@@ -1,12 +1,14 @@
 import type { Cadence } from "@/lib/catalog";
+import { currencyMeta, type Currency } from "@/lib/currency";
 
-export function formatMoney(cents: number): string {
+export function formatMoney(cents: number, currency: Currency | string = "USD"): string {
+  const meta = currencyMeta(currency);
   const negative = cents < 0;
   const absolute = Math.abs(cents);
   const hasCents = absolute % 100 !== 0;
-  const formatted = new Intl.NumberFormat("en-US", {
+  const formatted = new Intl.NumberFormat(meta.locale, {
     style: "currency",
-    currency: "USD",
+    currency: meta.code,
     minimumFractionDigits: hasCents ? 2 : 0,
     maximumFractionDigits: 2,
   }).format(absolute / 100);

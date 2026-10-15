@@ -9,6 +9,7 @@ import {
   type Risk,
   type Timeline,
 } from "@/lib/catalog";
+import { asCurrency, type Currency } from "@/lib/currency";
 
 export function parseDollars(input: unknown): number | null {
   const cleaned = String(input ?? "")
@@ -66,6 +67,7 @@ export type ProfileDraft = {
   takeHome: number;
   cadence: Cadence;
   risk: Risk;
+  currency: Currency;
   dreams: DreamDraft[];
 };
 
@@ -97,6 +99,9 @@ export function validateProfile(input: unknown): { ok: true; value: ProfileDraft
   const risk = asRisk(body.risk);
   if (!risk) return { ok: false, error: "Pick how jumpy the long-term money can be." };
 
+  const currency = body.currency == null || body.currency === "" ? "USD" : asCurrency(body.currency);
+  if (!currency) return { ok: false, error: "Pick a currency. Dollars, rupees, euros, or pounds." };
+
   if (!Array.isArray(body.dreams) || body.dreams.length < 1 || body.dreams.length > 3) {
     return { ok: false, error: "Bring one to three dreams. One is enough." };
   }
@@ -116,7 +121,7 @@ export function validateProfile(input: unknown): { ok: true; value: ProfileDraft
     dreams.push({ name: dreamName, target, why, timeline });
   }
 
-  return { ok: true, value: { name, takeHome, cadence, risk, dreams } };
+  return { ok: true, value: { name, takeHome, cadence, risk, currency, dreams } };
 }
 
 export function validateEntry(input: unknown): { ok: true; value: EntryDraft } | { ok: false; error: string } {

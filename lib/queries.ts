@@ -1,4 +1,5 @@
 import type { Emotion } from "@/lib/catalog";
+import { asCurrency, type Currency } from "@/lib/currency";
 import { asCadence, asEmotion, asRisk, asTimeline } from "@/lib/validate";
 import { getDb, withTransaction } from "@/lib/db";
 import { fundDreams, formatPeriodRange, inWindow, periodWindow } from "@/lib/money";
@@ -18,6 +19,7 @@ export function getProfile(): Profile | null {
     takeHomeCents: Number(row.take_home_cents),
     cadence,
     risk,
+    currency: asCurrency(row.currency) ?? "USD",
     createdAt: String(row.created_at),
   };
 }
@@ -29,9 +31,16 @@ export function createProfile(draft: ProfileDraft) {
   const createdAt = new Date().toISOString();
   withTransaction((db) => {
     db.prepare(
-      `INSERT INTO profile (id, name, take_home_cents, cadence, risk, created_at)
-       VALUES (1, ?, ?, ?, ?, ?)`,
-    ).run(draft.name, dollarsToCents(draft.takeHome), draft.cadence, draft.risk, createdAt);
+      `INSERT INTO profile (id, name, take_home_cents, cadence, risk, currency, created_at)
+       VALUES (1, ?, ?, ?, ?, ?, ?)`,
+    ).run(
+      draft.name,
+      dollarsToCents(draft.takeHome),
+      draft.cadence,
+      draft.risk,
+      draft.currency,
+      createdAt,
+    );
     const insertDream = db.prepare(
       `INSERT INTO dreams (name, target_cents, why, timeline, created_at)
        VALUES (?, ?, ?, ?, ?)`,
@@ -46,6 +55,11 @@ export function createProfile(draft: ProfileDraft) {
       );
     }
   });
+}
+
+export function updateCurrency(currency: Currency) {
+  const result = getDb().prepare("UPDATE profile SET currency = ? WHERE id = 1").run(currency);
+  if (result.changes === 0) throw new Error("The desk isn't open yet.");
 }
 
 export function listDreamRows() {

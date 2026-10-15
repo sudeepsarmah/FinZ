@@ -35,6 +35,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   const desk = pathname === "/" || pathname.startsWith("/dreams");
   const log = pathname.startsWith("/capture");
+  const about = pathname.startsWith("/about");
+  const guide = pathname.startsWith("/guide");
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -58,12 +60,18 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </p>
           </div>
         </div>
-        <nav className="mx-auto flex w-full max-w-6xl gap-6 border-t border-ink px-4 py-2 sm:px-6">
+        <nav className="mx-auto flex w-full max-w-6xl flex-wrap gap-x-6 gap-y-2 border-t border-ink px-4 py-2 sm:px-6">
           <NavLink href="/" active={desk}>
             The desk
           </NavLink>
           <NavLink href="/capture" active={log}>
             Log a note
+          </NavLink>
+          <NavLink href="/about" active={about}>
+            What this is
+          </NavLink>
+          <NavLink href="/guide" active={guide}>
+            Start Gemma
           </NavLink>
         </nav>
       </header>
@@ -71,8 +79,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <div className="border-b-2 border-stamp bg-sheet">
           <p className="mx-auto w-full max-w-6xl px-4 py-2 text-sm sm:px-6">
             Gemma is offline, so the messy-note reader is napping. You can still
-            type a note by hand. Start Ollama, then run{" "}
-            <span className="font-mono">ollama pull {model.id}</span>.
+            type a note by hand.{" "}
+            <Link href="/guide" className="underline decoration-stamp">
+              How to start it
+            </Link>
+            , then run <span className="font-mono">ollama pull {model.id}</span>.
           </p>
         </div>
       ) : null}
