@@ -25,8 +25,8 @@ const steps = [
 
 const faqs = [
   {
-    q: "Ollama is open, but FinZ still says it is offline.",
-    a: "The app being open is not the same as Gemma being downloaded. The navbar turns amber when Ollama answers but gemma3:4b is missing. Run ollama pull gemma3:4b once, then refresh. If the dot stays red, quit Ollama from the tray and open it again.",
+    q: "Ollama is open, but the live site still says it is offline.",
+    a: "The website is on the public internet, so the browser will not talk to Ollama until you allow it. Quit Ollama. In PowerShell run: $env:OLLAMA_ORIGINS='*'; ollama serve. Leave that window open, then refresh FinZ. Also run ollama pull gemma3:4b once if the navbar says Gemma is missing.",
   },
   {
     q: "Do I have to keep a terminal running?",
@@ -38,7 +38,7 @@ const faqs = [
   },
   {
     q: "Can I change weekly or monthly pay later?",
-    a: "Yes, on the 1st through the 5th of the month. After that the take-home and cadence stay put until next month, so a mid-month edit doesn't rewrite the stretch you're already in.",
+    a: "Yes. On the desk, change the amount or the cadence and click Update pay. It saves in this browser.",
   },
   {
     q: "Is the starter split financial advice?",

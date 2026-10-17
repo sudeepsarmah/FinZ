@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { loadLedger, rememberServerSummary, summarizeLedger } from "@/lib/local-ledger";
 import type { Summary } from "@/lib/types";
 
 export type SummaryState =
@@ -14,6 +15,11 @@ export function useSummary() {
 
   const reload = useCallback(async (mode: "hard" | "soft" = "hard") => {
     if (mode === "hard") setState({ status: "loading" });
+    const local = loadLedger();
+    if (local) {
+      setState({ status: "ready", data: summarizeLedger(local) });
+      return;
+    }
     try {
       const response = await fetch("/api/summary", { cache: "no-store" });
       if (response.status === 404) {
@@ -28,11 +34,12 @@ export function useSummary() {
         return;
       }
       const data = (await response.json()) as Summary;
-      setState({ status: "ready", data });
+      rememberServerSummary(data);
+      setState({ status: "ready", data: loadLedger() ? summarizeLedger(loadLedger()!) : data });
     } catch {
       setState({
         status: "error",
-        message: "The desk drawer stuck. Your notes are still on this machine.",
+        message: "The desk drawer stuck. Your notes are still in this browser.",
       });
     }
   }, []);
@@ -40,6 +47,11 @@ export function useSummary() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
+      const local = loadLedger();
+      if (local) {
+        if (!cancelled) setState({ status: "ready", data: summarizeLedger(local) });
+        return;
+      }
       try {
         const response = await fetch("/api/summary", { cache: "no-store" });
         if (cancelled) return;
@@ -55,12 +67,16 @@ export function useSummary() {
           return;
         }
         const data = (await response.json()) as Summary;
-        if (!cancelled) setState({ status: "ready", data });
+        rememberServerSummary(data);
+        if (!cancelled) {
+          const stored = loadLedger();
+          setState({ status: "ready", data: stored ? summarizeLedger(stored) : data });
+        }
       } catch {
         if (!cancelled) {
           setState({
             status: "error",
-            message: "The desk drawer stuck. Your notes are still on this machine.",
+            message: "The desk drawer stuck. Your notes are still in this browser.",
           });
         }
       }

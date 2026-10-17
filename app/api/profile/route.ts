@@ -1,7 +1,7 @@
 import { asCurrency } from "@/lib/currency";
 import { jsonError } from "@/lib/http";
 import { readModelStatus } from "@/lib/model";
-import { createProfile, getProfile, paycheckEditsOpen, updateCurrency, updatePaycheck } from "@/lib/queries";
+import { createProfile, getProfile, updateCurrency, updatePaycheck } from "@/lib/queries";
 import { asCadence, dollarsToCents, parseDollars, validateProfile } from "@/lib/validate";
 
 export const runtime = "nodejs";
@@ -51,11 +51,6 @@ export async function PATCH(request: Request) {
   }
 
   const wantsPaycheck = record.takeHome != null || record.cadence != null;
-  const localDay = Number(record.localDay);
-  const day = Number.isInteger(localDay) && localDay >= 1 && localDay <= 31 ? localDay : new Date().getDate();
-  if (wantsPaycheck && !paycheckEditsOpen(day)) {
-    return jsonError("Take-home and cadence can only change in the first 5 days of the month.", 403);
-  }
 
   try {
     if (currency) updateCurrency(currency);

@@ -1,5 +1,6 @@
 "use client";
 
+import { probeBrowserOllama } from "@/lib/browser-ollama";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
@@ -24,7 +25,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const local = await probeLocalOllama();
+      const local = await probeBrowserOllama();
       if (cancelled) return;
       if (local) {
         setModel(local);
@@ -108,13 +109,25 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <footer className="border-t-2 border-ink">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-4 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>
-            <a className="hover:text-stamp" href="https://github.com/sudeepsarmah/FinZ">
+            <a
+              className="hover:text-stamp"
+              href="https://github.com/sudeepsarmah/FinZ"
+              target="_blank"
+              rel="noreferrer"
+            >
               GitHub
             </a>
             {" · "}
-            <a className="hover:text-stamp" href="https://finz-omega.vercel.app">
+            <a
+              className="hover:text-stamp"
+              href="https://finz-omega.vercel.app"
+              target="_blank"
+              rel="noreferrer"
+            >
               Live site
             </a>
+            {" · "}
+            SQLite on disk · Mastra · Ollama · {model?.id ?? "Gemma"}
           </p>
           <p>© {new Date().getFullYear()} Sudeepta Sarmah</p>
         </div>
@@ -142,23 +155,6 @@ function OllamaDot({ status }: { status: GemmaStatus | null }) {
       <span>{label}</span>
     </p>
   );
-}
-
-async function probeLocalOllama(): Promise<GemmaStatus | null> {
-  try {
-    const response = await fetch("http://127.0.0.1:11434/api/tags", {
-      signal: AbortSignal.timeout(2500),
-    });
-    if (!response.ok) return { id: "gemma3:4b", ollama: "up", modelReady: false };
-    const body = (await response.json()) as { models?: Array<{ name: string }> };
-    const id = "gemma3:4b";
-    const modelReady = (body.models ?? []).some(
-      (model) => model.name === id || model.name.startsWith(`${id}:`),
-    );
-    return { id, ollama: "up", modelReady };
-  } catch {
-    return null;
-  }
 }
 
 function NavLink({

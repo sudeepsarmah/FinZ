@@ -12,7 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useSlow } from "@/components/use-slow";
 import { errorMessage } from "@/components/use-summary";
+import { parseNoteInBrowser } from "@/lib/browser-ollama";
 import { EMOTIONS, type Direction, type Emotion } from "@/lib/catalog";
+import { addLedgerEntry } from "@/lib/local-ledger";
 import type { Currency } from "@/lib/currency";
 import { formatMoney } from "@/lib/money";
 import type { ParsedNote } from "@/lib/types";
@@ -88,6 +90,11 @@ export function CaptureForm() {
         signal: AbortSignal.timeout(240_000),
       });
       if (!response.ok) {
+        const local = await parseNoteInBrowser(text);
+        if (local) {
+          applyParse(local);
+          return;
+        }
         setError(await errorMessage(response, "Gemma couldn't read that."));
         setPhase("review");
         setNote(text);
@@ -128,15 +135,12 @@ export function CaptureForm() {
     setError("");
     setBusy("save");
     try {
-      const response = await fetch("/api/entries", {
+      addLedgerEntry(check.value);
+      void fetch("/api/entries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        setError(await errorMessage(response, "The note didn't land."));
-        return;
-      }
+      }).catch(() => undefined);
       setSaved({
         amount: check.value.amount,
         direction: check.value.direction,

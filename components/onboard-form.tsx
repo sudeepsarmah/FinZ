@@ -7,10 +7,10 @@ import { StatusBlock } from "@/components/status-block";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { errorMessage } from "@/components/use-summary";
 import { CurrencyPicker } from "@/components/currency-picker";
 import { CADENCES, RISKS, TIMELINES, type Risk, type Timeline } from "@/lib/catalog";
 import type { Currency } from "@/lib/currency";
+import { openLedger } from "@/lib/local-ledger";
 import { validateProfile } from "@/lib/validate";
 
 type DreamForm = {
@@ -88,18 +88,15 @@ export function OnboardForm() {
     }
     setBusy(true);
     try {
-      const response = await fetch("/api/profile", {
+      openLedger(check.value);
+      void fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        setError(await errorMessage(response, "Couldn't open the desk."));
-        return;
-      }
+      }).catch(() => undefined);
       router.push("/");
     } catch {
-      setError("Couldn't open the desk. Nothing left this machine, because it never got saved.");
+      setError("Couldn't open the desk in this browser.");
     } finally {
       setBusy(false);
     }

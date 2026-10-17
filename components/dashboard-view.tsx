@@ -11,7 +11,9 @@ import { cn } from "@/lib/utils";
 import { useSummary, errorMessage } from "@/components/use-summary";
 import { CADENCES, cadenceMeta, emotionMeta, type Cadence } from "@/lib/catalog";
 import type { Currency } from "@/lib/currency";
+import { addLedgerEntry, patchLedgerProfile, removeLedgerEntry } from "@/lib/local-ledger";
 import { formatMoney } from "@/lib/money";
+import { dollarsToCents, parseDollars } from "@/lib/validate";
 import type { Dream, Entry } from "@/lib/types";
 
 export function DashboardView() {
@@ -52,18 +54,15 @@ export function DashboardView() {
     setCurrencyBusy(true);
     setActionError("");
     try {
-      const response = await fetch("/api/profile", {
+      patchLedgerProfile({ currency });
+      void fetch("/api/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currency }),
-      });
-      if (!response.ok) {
-        setActionError(await errorMessage(response, "Couldn't switch the currency."));
-        return;
-      }
+      }).catch(() => undefined);
       await reload("soft");
     } catch {
-      setActionError("Couldn't switch the currency. The ledger is still on this machine.");
+      setActionError("Couldn't switch the currency in this browser.");
     } finally {
       setCurrencyBusy(false);
     }
@@ -72,25 +71,24 @@ export function DashboardView() {
   async function logPaycheck() {
     setActionError("");
     setPaycheckBusy(true);
+    const payload = {
+      amount: (data.profile.takeHomeCents / 100).toFixed(2),
+      direction: "in" as const,
+      label: "Paycheck",
+      emotion: "survival" as const,
+      note: "Take-home, dropped in from the desk.",
+      rawNote: null,
+    };
     try {
-      const response = await fetch("/api/entries", {
+      addLedgerEntry({ ...payload, amount: data.profile.takeHomeCents / 100 });
+      void fetch("/api/entries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: (data.profile.takeHomeCents / 100).toFixed(2),
-          direction: "in",
-          label: "Paycheck",
-          emotion: "survival",
-          note: "Take-home, dropped in from the desk.",
-        }),
-      });
-      if (!response.ok) {
-        setActionError(await errorMessage(response, "The paycheck didn't land."));
-        return;
-      }
+        body: JSON.stringify(payload),
+      }).catch(() => undefined);
       await reload("soft");
     } catch {
-      setActionError("The paycheck didn't land. The ledger is still on this machine.");
+      setActionError("The paycheck didn't land in this browser.");
     } finally {
       setPaycheckBusy(false);
     }
@@ -98,11 +96,8 @@ export function DashboardView() {
 
   async function removeEntry(id: number) {
     setActionError("");
-    const response = await fetch(`/api/entries/${id}`, { method: "DELETE" });
-    if (!response.ok) {
-      setActionError(await errorMessage(response, "Couldn't remove that note."));
-      return;
-    }
+    removeLedgerEntry(id);
+    void fetch(`/api/entries/${id}`, { method: "DELETE" }).catch(() => undefined);
     await reload("soft");
   }
 
@@ -312,32 +307,28 @@ function PaycheckEditor({
   onSaved: () => Promise<void>;
   onError: (message: string) => void;
 }) {
-  const open = new Date().getDate() <= 5;
   const [amount, setAmount] = useState(String(takeHomeCents / 100));
   const [nextCadence, setNextCadence] = useState<Cadence>(cadence);
   const [busy, setBusy] = useState(false);
 
   async function save() {
+    const dollars = parseDollars(amount);
+    if (dollars == null) {
+      onError("Take-home has to be a number bigger than zero.");
+      return;
+    }
     setBusy(true);
     onError("");
-    const today = new Date();
     try {
-      const response = await fetch("/api/profile", {
+      patchLedgerProfile({ takeHomeCents: dollarsToCents(dollars), cadence: nextCadence });
+      void fetch("/api/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          takeHome: amount,
-          cadence: nextCadence,
-          localDay: today.getDate(),
-        }),
-      });
-      if (!response.ok) {
-        onError(await errorMessage(response, "Couldn't update the paycheck."));
-        return;
-      }
+        body: JSON.stringify({ takeHome: amount, cadence: nextCadence }),
+      }).catch(() => undefined);
       await onSaved();
     } catch {
-      onError("Couldn't update the paycheck. The ledger is still on this machine.");
+      onError("Couldn't update the paycheck in this browser.");
     } finally {
       setBusy(false);
     }
@@ -348,10 +339,9 @@ function PaycheckEditor({
       <p className="text-sm text-muted-foreground">
         You said {money(takeHomeCents)} lands {cadenceMeta(cadence).phrase}.
       </p>
-      {open ? (
-        <>
+      <>
           <p className="font-mono text-[11px] uppercase tracking-[0.16em]">
-            Change take-home through the 5th
+            Change take-home or how often it lands
           </p>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Input
@@ -381,11 +371,6 @@ function PaycheckEditor({
             </Button>
           </div>
         </>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          Take-home and weekly or monthly cadence lock after the 5th. You can change them again on the 1st.
-        </p>
-      )}
     </div>
   );
 }
