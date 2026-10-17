@@ -1,5 +1,7 @@
 # FinZ
 
+Live site: [https://finz-omega.vercel.app](https://finz-omega.vercel.app)
+
 A local-first money desk for the first real paycheck. Dreams and feelings up front, a spreadsheet nowhere. Gemma reads a messy note on your laptop. Mastra is the agent harness. Income, expenses, and dreams stay in a SQLite file on the machine.
 
 ## Run on your laptop

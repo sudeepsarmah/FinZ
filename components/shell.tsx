@@ -111,6 +111,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <a className="hover:text-stamp" href="https://github.com/sudeepsarmah/FinZ">
               GitHub
             </a>
+            {" · "}
+            <a className="hover:text-stamp" href="https://finz-omega.vercel.app">
+              Live site
+            </a>
           </p>
           <p>© {new Date().getFullYear()} Sudeepta Sarmah</p>
         </div>
