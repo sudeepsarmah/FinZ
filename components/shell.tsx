@@ -95,7 +95,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <p className="mx-auto w-full max-w-6xl px-4 py-2 text-sm sm:px-6">
             {model.ollama === "up"
               ? `Ollama is running, but ${model.id} isn't downloaded yet. You can still type a note by hand.`
-              : "Ollama isn't reachable, so the messy-note reader is napping. You can still type a note by hand."}{" "}
+              : "This site can't see Ollama yet. Quit Ollama, then in PowerShell run $env:OLLAMA_ORIGINS='*'; ollama serve and leave that window open."}{" "}
             <Link href="/guide" className="underline decoration-stamp">
               Start Gemma
             </Link>
