@@ -9,28 +9,28 @@ const steps = [
   {
     n: "02",
     title: "Download Gemma once",
-    body: "Open Command Prompt and paste ollama pull gemma3:4b. Wait until it finishes. That file stays on your computer. You can close the window after.",
+    body: "Open PowerShell and paste ollama pull gemma3:4b. Wait until it says success. That file stays on your computer. You can close this window after.",
   },
   {
     n: "03",
-    title: "Use this website",
-    body: "Bookmark FinZ and open the desk in the browser. Leave Ollama in the tray. You do not start a server, and you do not keep a terminal open for the site.",
+    title: "Let the website see Ollama",
+    body: "FinZ is on the internet, so your browser will not talk to Ollama until you allow it. Quit Ollama from the tray. Open a new PowerShell window, paste the two lines below, and leave that window open. Then refresh this page. The navbar should say Ollama connected.",
   },
   {
     n: "04",
-    title: "Log a real note",
-    body: "Type something like “spent 200 on groceries”. Tab can finish the word. Read it, fix anything Gemma fumbled, then save. Come back tomorrow and do it again.",
+    title: "Use the site",
+    body: "You do not install FinZ and you do not run the website from a folder. Bookmark this page, open the desk, and log a note. Only the Ollama window from step 3 stays open.",
   },
 ];
 
 const faqs = [
   {
     q: "Ollama is open, but the live site still says it is offline.",
-    a: "The website is on the public internet, so the browser will not talk to Ollama until you allow it. Quit Ollama. In PowerShell run: $env:OLLAMA_ORIGINS='*'; ollama serve. Leave that window open, then refresh FinZ. Also run ollama pull gemma3:4b once if the navbar says Gemma is missing.",
+    a: "Do step 3 again. Quit Ollama, then in PowerShell set OLLAMA_ORIGINS to * and run ollama serve. Leave that window open and refresh. If the navbar says Gemma is missing, run ollama pull gemma3:4b once.",
   },
   {
     q: "Do I have to keep a terminal running?",
-    a: "No. FinZ is the website. The only thing that stays running on your computer is the Ollama app, so Gemma can read a note privately.",
+    a: "You do not keep a terminal open for FinZ. You do leave the PowerShell window from step 3 open, because that is Ollama allowing this website to use Gemma on your computer.",
   },
   {
     q: "Where do my numbers live?",
@@ -75,16 +75,25 @@ export function Guide() {
         ))}
       </section>
 
-      <section className="grid gap-3">
-        <h2 className="font-serif text-3xl">The one command</h2>
-        <p className="leading-7">
-          After Ollama is installed, this downloads Gemma. Do it once.{" "}
-          <a className="underline decoration-stamp" href="https://ollama.com/download">
-            Get Ollama
-          </a>{" "}
-          first if the command says it is not recognized.
-        </p>
-        <pre className="overflow-x-auto border-2 border-ink bg-sheet p-4 font-mono text-sm">ollama pull gemma3:4b</pre>
+      <section className="grid gap-6">
+        <h2 className="font-serif text-3xl">Paste these, in order</h2>
+        <div className="grid gap-3">
+          <p className="leading-7">
+            Step 2, once.{" "}
+            <a className="underline decoration-stamp" href="https://ollama.com/download">
+              Get Ollama
+            </a>{" "}
+            first if PowerShell says the command is not recognized. You can close this window when it finishes.
+          </p>
+          <pre className="overflow-x-auto border-2 border-ink bg-sheet p-4 font-mono text-sm">ollama pull gemma3:4b</pre>
+        </div>
+        <div className="grid gap-3">
+          <p className="leading-7">
+            Step 3, every time the navbar says Ollama is offline. Quit Ollama first. Leave this window open, then refresh FinZ.
+          </p>
+          <pre className="overflow-x-auto border-2 border-ink bg-sheet p-4 font-mono text-sm">{`$env:OLLAMA_ORIGINS='*'
+ollama serve`}</pre>
+        </div>
         <p className="leading-7">
           Then{" "}
           <Link href="/onboard" className="underline decoration-stamp">
