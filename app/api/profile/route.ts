@@ -1,8 +1,8 @@
 import { asCurrency } from "@/lib/currency";
 import { jsonError } from "@/lib/http";
 import { readModelStatus } from "@/lib/model";
-import { createProfile, getProfile, updateCurrency } from "@/lib/queries";
-import { validateProfile } from "@/lib/validate";
+import { createProfile, getProfile, paycheckEditsOpen, updateCurrency, updatePaycheck } from "@/lib/queries";
+import { asCadence, dollarsToCents, parseDollars, validateProfile } from "@/lib/validate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,17 +44,32 @@ export async function PATCH(request: Request) {
   } catch {
     return jsonError("That didn't come through as JSON.");
   }
-  const currency = asCurrency(
-    body && typeof body === "object" && "currency" in body
-      ? (body as { currency?: unknown }).currency
-      : null,
-  );
-  if (!currency) return jsonError("Pick dollars, rupees, euros, or pounds.");
+  const record = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
+  const currency = record.currency == null ? null : asCurrency(record.currency);
+  if (record.currency != null && !currency) {
+    return jsonError("Pick dollars, rupees, euros, or pounds.");
+  }
+
+  const wantsPaycheck = record.takeHome != null || record.cadence != null;
+  const localDay = Number(record.localDay);
+  const day = Number.isInteger(localDay) && localDay >= 1 && localDay <= 31 ? localDay : new Date().getDate();
+  if (wantsPaycheck && !paycheckEditsOpen(day)) {
+    return jsonError("Take-home and cadence can only change in the first 5 days of the month.", 403);
+  }
+
   try {
-    updateCurrency(currency);
+    if (currency) updateCurrency(currency);
+    if (wantsPaycheck) {
+      const profile = getProfile();
+      if (!profile) return jsonError("The desk isn't open yet.", 404);
+      const takeHome = record.takeHome == null ? profile.takeHomeCents / 100 : parseDollars(record.takeHome);
+      const cadence = record.cadence == null ? profile.cadence : asCadence(record.cadence);
+      if (takeHome == null || !cadence) return jsonError("Take-home has to be a number, and cadence has to be weekly, every other week, or monthly.");
+      updatePaycheck(record.takeHome == null ? profile.takeHomeCents : dollarsToCents(takeHome), cadence);
+    }
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Couldn't switch the currency.";
+    const message = error instanceof Error ? error.message : "Couldn't update the desk.";
     return jsonError(message, message.includes("isn't open") ? 404 : 500);
   }
-  return Response.json({ ok: true, currency });
+  return Response.json({ ok: true });
 }

@@ -227,10 +227,11 @@ Recompute the three percents so the check passes. Still no tickers.`,
 
 async function assertModel() {
   const status = await readModelStatus();
-  if (!status.online) {
-    throw new Error(
-      `Model ${MODEL_ID} isn't loaded. Start Ollama and run: ollama pull ${MODEL_ID}`,
-    );
+  if (status.ollama === "down") {
+    throw new Error("OLLAMA_DOWN");
+  }
+  if (!status.modelReady) {
+    throw new Error(`MODEL_MISSING ${MODEL_ID}`);
   }
 }
 

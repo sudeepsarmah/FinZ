@@ -1,6 +1,6 @@
 import { writeReflection } from "@/lib/agent";
 import { jsonError } from "@/lib/http";
-import { MODEL_ID } from "@/lib/model";
+import { readModelStatus, ollamaErrorMessage } from "@/lib/model";
 import { dreamContext, listDreamRows } from "@/lib/queries";
 
 export const runtime = "nodejs";
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     return Response.json({ reflection });
   } catch (error) {
     console.error(error);
-    return modelFailure(error);
+    return await modelFailure(error);
   }
 }
 
@@ -37,13 +37,11 @@ async function readDreamId(request: Request) {
   }
 }
 
-function modelFailure(error: unknown) {
+async function modelFailure(error: unknown) {
   const message = error instanceof Error ? error.message : "";
-  if (message.includes("isn't loaded") || message.toLowerCase().includes("not found")) {
-    return jsonError(
-      `Gemma isn't on this machine yet. In a terminal: ollama pull ${MODEL_ID}`,
-      503,
-    );
+  if (message.startsWith("OLLAMA_DOWN") || message.startsWith("MODEL_MISSING")) {
+    const status = await readModelStatus();
+    return jsonError(ollamaErrorMessage(status) ?? "Gemma isn't ready.", 503);
   }
   return jsonError(
     "Gemma stalled before it finished. Nothing left the laptop. Try another pass.",

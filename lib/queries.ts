@@ -62,6 +62,17 @@ export function updateCurrency(currency: Currency) {
   if (result.changes === 0) throw new Error("The desk isn't open yet.");
 }
 
+export function updatePaycheck(takeHomeCents: number, cadence: Profile["cadence"]) {
+  const result = getDb()
+    .prepare("UPDATE profile SET take_home_cents = ?, cadence = ? WHERE id = 1")
+    .run(takeHomeCents, cadence);
+  if (result.changes === 0) throw new Error("The desk isn't open yet.");
+}
+
+export function paycheckEditsOpen(dayOfMonth: number) {
+  return dayOfMonth >= 1 && dayOfMonth <= 5;
+}
+
 export function listDreamRows() {
   return getDb()
     .prepare("SELECT * FROM dreams ORDER BY id ASC")

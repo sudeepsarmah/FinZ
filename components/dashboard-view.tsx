@@ -6,9 +6,10 @@ import { CurrencyPicker } from "@/components/currency-picker";
 import { Landing } from "@/components/landing";
 import { StatusBlock } from "@/components/status-block";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useSummary, errorMessage } from "@/components/use-summary";
-import { cadenceMeta, emotionMeta } from "@/lib/catalog";
+import { CADENCES, cadenceMeta, emotionMeta, type Cadence } from "@/lib/catalog";
 import type { Currency } from "@/lib/currency";
 import { formatMoney } from "@/lib/money";
 import type { Dream, Entry } from "@/lib/types";
@@ -129,10 +130,13 @@ export function DashboardView() {
                 ? "You're spending ahead of what you've logged coming in. If the paycheck hasn't been written down, the sign is lying."
                 : "Still on your side of the line this stretch."}
           </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            You said {money(data.profile.takeHomeCents)} lands{" "}
-            {cadenceMeta(data.profile.cadence).phrase}.
-          </p>
+          <PaycheckEditor
+            takeHomeCents={data.profile.takeHomeCents}
+            cadence={data.profile.cadence}
+            money={money}
+            onSaved={() => reload("soft")}
+            onError={setActionError}
+          />
           <div className="mt-4 grid gap-2">
             <p className="font-mono text-[11px] uppercase tracking-[0.16em]">Currency</p>
             <CurrencyPicker
@@ -291,6 +295,97 @@ function EmotionMix({ emotions }: { emotions: Array<{ slug: Entry["emotion"]; co
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+function PaycheckEditor({
+  takeHomeCents,
+  cadence,
+  money,
+  onSaved,
+  onError,
+}: {
+  takeHomeCents: number;
+  cadence: Cadence;
+  money: (cents: number) => string;
+  onSaved: () => Promise<void>;
+  onError: (message: string) => void;
+}) {
+  const open = new Date().getDate() <= 5;
+  const [amount, setAmount] = useState(String(takeHomeCents / 100));
+  const [nextCadence, setNextCadence] = useState<Cadence>(cadence);
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    setBusy(true);
+    onError("");
+    const today = new Date();
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          takeHome: amount,
+          cadence: nextCadence,
+          localDay: today.getDate(),
+        }),
+      });
+      if (!response.ok) {
+        onError(await errorMessage(response, "Couldn't update the paycheck."));
+        return;
+      }
+      await onSaved();
+    } catch {
+      onError("Couldn't update the paycheck. The ledger is still on this machine.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 grid gap-3">
+      <p className="text-sm text-muted-foreground">
+        You said {money(takeHomeCents)} lands {cadenceMeta(cadence).phrase}.
+      </p>
+      {open ? (
+        <>
+          <p className="font-mono text-[11px] uppercase tracking-[0.16em]">
+            Change take-home through the 5th
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input
+              className="h-11 max-w-40 font-mono"
+              inputMode="decimal"
+              value={amount}
+              onValueChange={setAmount}
+              aria-label="Take-home amount"
+            />
+            <div className="flex flex-wrap gap-2">
+              {CADENCES.map((item) => (
+                <button
+                  key={item.slug}
+                  type="button"
+                  aria-pressed={nextCadence === item.slug}
+                  onClick={() => setNextCadence(item.slug)}
+                  className={`cursor-pointer border-2 px-3 py-2 text-sm ${
+                    nextCadence === item.slug ? "border-ink bg-ink text-paper" : "border-ink bg-sheet"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <Button type="button" className="h-11 px-4" disabled={busy} onClick={() => void save()}>
+              {busy ? "Saving…" : "Update pay"}
+            </Button>
+          </div>
+        </>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Take-home and weekly or monthly cadence lock after the 5th. You can change them again on the 1st.
+        </p>
+      )}
     </div>
   );
 }

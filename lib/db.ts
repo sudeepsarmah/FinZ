@@ -6,7 +6,9 @@ const globalForDb = globalThis as unknown as { finzDb?: DatabaseSync };
 
 export function getDb() {
   if (!globalForDb.finzDb) {
-    const directory = path.join(process.cwd(), "data");
+    const directory = process.env.VERCEL
+      ? path.join("/tmp", "finz")
+      : path.join(process.cwd(), "data");
     fs.mkdirSync(directory, { recursive: true });
     const db = new DatabaseSync(path.join(directory, "finz.db"));
     db.exec(`

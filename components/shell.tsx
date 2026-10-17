@@ -19,18 +19,32 @@ export function ShellDate({
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const today = useContext(TodayContext);
-  const [model, setModel] = useState<{ id: string; online: boolean } | null>(null);
+  const [model, setModel] = useState<GemmaStatus | null>(null);
 
   useEffect(() => {
-    void fetch("/api/health", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) return;
-        const body = (await response.json()) as {
-          model?: { id: string; online: boolean };
-        };
+    let cancelled = false;
+    async function load() {
+      const local = await probeLocalOllama();
+      if (cancelled) return;
+      if (local) {
+        setModel(local);
+        return;
+      }
+      try {
+        const response = await fetch("/api/health", { cache: "no-store" });
+        if (!response.ok || cancelled) return;
+        const body = (await response.json()) as { model?: GemmaStatus };
         if (body.model) setModel(body.model);
-      })
-      .catch(() => undefined);
+      } catch {
+        if (!cancelled) setModel({ id: "gemma3:4b", ollama: "down", modelReady: false });
+      }
+    }
+    void load();
+    const timer = window.setInterval(() => void load(), 20000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, []);
 
   const desk = pathname === "/" || pathname.startsWith("/dreams");
@@ -51,7 +65,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
           <div className="text-right">
-            <span className="mb-2 inline-block size-3 bg-stamp" aria-hidden />
+            <OllamaDot status={model} />
             <p className="font-mono text-[10px] uppercase tracking-[0.16em]" suppressHydrationWarning>
               {today}
             </p>
@@ -75,15 +89,16 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </NavLink>
         </nav>
       </header>
-      {model && !model.online ? (
+      {model && !model.modelReady ? (
         <div className="border-b-2 border-stamp bg-sheet">
           <p className="mx-auto w-full max-w-6xl px-4 py-2 text-sm sm:px-6">
-            Gemma is offline, so the messy-note reader is napping. You can still
-            type a note by hand.{" "}
+            {model.ollama === "up"
+              ? `Ollama is running, but ${model.id} isn't downloaded yet. You can still type a note by hand.`
+              : "Ollama isn't reachable, so the messy-note reader is napping. You can still type a note by hand."}{" "}
             <Link href="/guide" className="underline decoration-stamp">
               Start Gemma
-            </Link>{" "}
-            on this computer, then refresh. The website itself stays open.
+            </Link>
+            .
           </p>
         </div>
       ) : null}
@@ -92,12 +107,54 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </main>
       <footer className="border-t-2 border-ink">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-4 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p>SQLite on disk · Mastra · Ollama · {model?.id ?? "Gemma"}</p>
-          <p>Not a bank. Not a broker. A desk.</p>
+          <p>
+            <a className="hover:text-stamp" href="https://github.com/sudeepsarmah/FinZ">
+              GitHub
+            </a>
+          </p>
+          <p>© {new Date().getFullYear()} Sudeepta Sarmah</p>
         </div>
       </footer>
     </div>
   );
+}
+
+type GemmaStatus = { id: string; ollama: "up" | "down"; modelReady: boolean };
+
+function OllamaDot({ status }: { status: GemmaStatus | null }) {
+  const ready = status?.modelReady === true;
+  const ollamaUp = status?.ollama === "up";
+  const color = !status ? "bg-muted-foreground" : ready ? "bg-emerald-800" : ollamaUp ? "bg-amber-600" : "bg-stamp";
+  const label = !status
+    ? "Checking Ollama"
+    : ready
+      ? "Ollama connected"
+      : ollamaUp
+        ? "Ollama on, Gemma missing"
+        : "Ollama offline";
+  return (
+    <p className="mb-2 flex items-center justify-end gap-2 font-mono text-[10px] uppercase tracking-[0.14em]">
+      <span className={`inline-block size-2.5 ${color}`} aria-hidden />
+      <span>{label}</span>
+    </p>
+  );
+}
+
+async function probeLocalOllama(): Promise<GemmaStatus | null> {
+  try {
+    const response = await fetch("http://127.0.0.1:11434/api/tags", {
+      signal: AbortSignal.timeout(2500),
+    });
+    if (!response.ok) return { id: "gemma3:4b", ollama: "up", modelReady: false };
+    const body = (await response.json()) as { models?: Array<{ name: string }> };
+    const id = "gemma3:4b";
+    const modelReady = (body.models ?? []).some(
+      (model) => model.name === id || model.name.startsWith(`${id}:`),
+    );
+    return { id, ollama: "up", modelReady };
+  } catch {
+    return null;
+  }
 }
 
 function NavLink({

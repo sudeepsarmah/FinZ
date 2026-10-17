@@ -1,6 +1,6 @@
 import { parseNote } from "@/lib/agent";
 import { jsonError } from "@/lib/http";
-import { MODEL_ID } from "@/lib/model";
+import { MODEL_ID, readModelStatus, ollamaErrorMessage } from "@/lib/model";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,11 +34,9 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error(error);
     const message = error instanceof Error ? error.message : "";
-    if (message.includes("isn't loaded") || message.toLowerCase().includes("not found")) {
-      return jsonError(
-        `Gemma isn't on this machine yet. In a terminal: ollama pull ${MODEL_ID}`,
-        503,
-      );
+    if (message.startsWith("OLLAMA_DOWN") || message.startsWith("MODEL_MISSING")) {
+      const status = await readModelStatus();
+      return jsonError(ollamaErrorMessage(status) ?? `ollama pull ${MODEL_ID}`, 503);
     }
     return jsonError(
       "Gemma couldn't read that note. Type it in below, or try the sentence again. Nothing left the laptop.",

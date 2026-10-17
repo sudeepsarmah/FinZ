@@ -1,6 +1,6 @@
 import { sketchAllocation } from "@/lib/agent";
 import { jsonError } from "@/lib/http";
-import { MODEL_ID } from "@/lib/model";
+import { readModelStatus, ollamaErrorMessage } from "@/lib/model";
 import { dreamContext, listDreamRows } from "@/lib/queries";
 
 export const runtime = "nodejs";
@@ -30,11 +30,9 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error(error);
     const message = error instanceof Error ? error.message : "";
-    if (message.includes("isn't loaded") || message.toLowerCase().includes("not found")) {
-      return jsonError(
-        `Gemma isn't on this machine yet. In a terminal: ollama pull ${MODEL_ID}`,
-        503,
-      );
+    if (message.startsWith("OLLAMA_DOWN") || message.startsWith("MODEL_MISSING")) {
+      const status = await readModelStatus();
+      return jsonError(ollamaErrorMessage(status) ?? "Gemma isn't ready.", 503);
     }
     return jsonError(
       "The sketch wandered off before it had three buckets. Nothing left the laptop. Try again.",

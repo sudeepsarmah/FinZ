@@ -1,8 +1,58 @@
 import Link from "next/link";
 
+const steps = [
+  {
+    n: "01",
+    title: "Install Ollama",
+    body: "Download the app from ollama.com/download and click through the installer. When the llama icon is in the tray, Ollama is running. You do not install FinZ.",
+  },
+  {
+    n: "02",
+    title: "Download Gemma once",
+    body: "Open Command Prompt and paste ollama pull gemma3:4b. Wait until it finishes. That file stays on your computer. You can close the window after.",
+  },
+  {
+    n: "03",
+    title: "Use this website",
+    body: "Bookmark FinZ and open the desk in the browser. Leave Ollama in the tray. You do not start a server, and you do not keep a terminal open for the site.",
+  },
+  {
+    n: "04",
+    title: "Log a real note",
+    body: "Type something like “spent 200 on groceries”. Tab can finish the word. Read it, fix anything Gemma fumbled, then save. Come back tomorrow and do it again.",
+  },
+];
+
+const faqs = [
+  {
+    q: "Ollama is open, but FinZ still says it is offline.",
+    a: "The app being open is not the same as Gemma being downloaded. The navbar turns amber when Ollama answers but gemma3:4b is missing. Run ollama pull gemma3:4b once, then refresh. If the dot stays red, quit Ollama from the tray and open it again.",
+  },
+  {
+    q: "Do I have to keep a terminal running?",
+    a: "No. FinZ is the website. The only thing that stays running on your computer is the Ollama app, so Gemma can read a note privately.",
+  },
+  {
+    q: "Where do my numbers live?",
+    a: "On a copy you run yourself, they sit in a SQLite file on that computer. They are not sent to a chatbot company. The public site is a demo of the desk.",
+  },
+  {
+    q: "Can I change weekly or monthly pay later?",
+    a: "Yes, on the 1st through the 5th of the month. After that the take-home and cadence stay put until next month, so a mid-month edit doesn't rewrite the stretch you're already in.",
+  },
+  {
+    q: "Is the starter split financial advice?",
+    a: "No. It is a classroom sketch of three buckets: emergency buffer, cash, and a broad index fund. No tickers, and nobody places a trade.",
+  },
+  {
+    q: "Gemma got the note wrong.",
+    a: "That's expected. Change the amount, the label, or the feeling before you save. Nothing is stored until you put it on the desk.",
+  },
+];
+
 export function Guide() {
   return (
-    <article className="grid max-w-3xl gap-10">
+    <article className="grid max-w-3xl gap-12">
       <header>
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-stamp">Start here</p>
         <h1 className="mt-2 font-serif text-5xl leading-[0.95] tracking-tight sm:text-6xl">
@@ -10,77 +60,51 @@ export function Guide() {
         </h1>
         <p className="mt-4 text-lg leading-8">
           FinZ is a website. You do not install it, and you do not leave a terminal window open for
-          it. The only extra app on your computer is Ollama. That app holds Gemma, so a messy note
-          can be read on your machine instead of being sent to someone else&apos;s chatbot.
+          it. The only extra app on your computer is Ollama, so a messy note can be read on your
+          machine instead of being sent to someone else&apos;s chatbot.
         </p>
       </header>
 
-      <section className="grid gap-3">
-        <h2 className="font-serif text-3xl">1. Install Ollama</h2>
-        <p className="leading-7">
-          Go to{" "}
-          <a className="underline decoration-stamp" href="https://ollama.com/download">
-            ollama.com/download
-          </a>{" "}
-          and install the app for your computer. On Windows, open the installer and click through.
-          When it finishes, Ollama sits quietly in the system tray. If the llama icon is there, it is running.
-        </p>
+      <section className="grid gap-4 sm:grid-cols-2">
+        {steps.map((step) => (
+          <article key={step.n} className="border-2 border-ink bg-sheet p-4">
+            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-stamp">{step.n}</p>
+            <h2 className="mt-2 font-serif text-2xl">{step.title}</h2>
+            <p className="mt-2 text-sm leading-6">{step.body}</p>
+          </article>
+        ))}
       </section>
 
       <section className="grid gap-3">
-        <h2 className="font-serif text-3xl">2. Download Gemma</h2>
+        <h2 className="font-serif text-3xl">The one command</h2>
         <p className="leading-7">
-          This is a one-time download, a few gigabytes. Open Command Prompt or Git Bash and paste:
+          After Ollama is installed, this downloads Gemma. Do it once.{" "}
+          <a className="underline decoration-stamp" href="https://ollama.com/download">
+            Get Ollama
+          </a>{" "}
+          first if the command says it is not recognized.
         </p>
         <pre className="overflow-x-auto border-2 border-ink bg-sheet p-4 font-mono text-sm">ollama pull gemma3:4b</pre>
         <p className="leading-7">
-          Wait until it says success. You can close that window afterward. If your laptop is tight on
-          memory, use <span className="font-mono">gemma3:1b</span> instead. It is faster and thinner,
-          and more likely to invent a purchase. 4B is the one FinZ is aimed at.
-        </p>
-      </section>
-
-      <section className="grid gap-3">
-        <h2 className="font-serif text-3xl">3. Use FinZ in the browser</h2>
-        <p className="leading-7">
-          You are already on the site. Bookmark it and come back the same way you open any other
-          page. Ollama can keep running in the tray. You do not start FinZ from a folder, and you
-          do not run install commands to use the desk.
-        </p>
-        <p className="leading-7">
+          Then{" "}
           <Link href="/onboard" className="underline decoration-stamp">
-            Open the desk
-          </Link>{" "}
-          and tell it your name, what lands in your account, which currency you use, and one to
-          three dreams.
+            open the desk
+          </Link>
+          . If the laptop is tight on memory, <span className="font-mono">gemma3:1b</span> is the
+          smaller download. It is more likely to invent a purchase.
         </p>
       </section>
 
       <section className="grid gap-3">
-        <h2 className="font-serif text-3xl">4. Log something from your day</h2>
-        <ol className="grid list-decimal gap-2 pl-5 leading-7">
-          <li>Choose Log a note.</li>
-          <li>
-            Type a messy line. <span className="font-mono">spe</span> offers <span className="font-mono">spent</span>.
-            Press Tab to take it, or keep typing if you meant a different word.
-          </li>
-          <li>Click Read it. Gemma fills the amount, whether money came in or went out, a short label, and a feeling.</li>
-          <li>Change anything it got wrong. Then put it on the desk.</li>
-          <li>Come back tomorrow and do the same. The desk keeps what you saved on this computer.</li>
-        </ol>
-        <p className="leading-7">
-          A useful first note: <span className="font-mono">spent 200 on groceries</span> or{" "}
-          <span className="font-mono">$14 matcha after a bad standup, felt like a treat</span>.
-        </p>
-      </section>
-
-      <section className="grid gap-3">
-        <h2 className="font-serif text-3xl">If the banner says Gemma is offline</h2>
-        <p className="leading-7">
-          The site is still open. Only the reader is asleep. Click the Ollama llama in the tray, or
-          open Ollama from the Start menu, then refresh this page. You already downloaded the model.
-          You do not install FinZ again.
-        </p>
+        <h2 className="border-b-2 border-ink pb-2 font-serif text-3xl">Questions that come up</h2>
+        <div className="grid gap-3">
+          {faqs.map((item) => (
+            <details key={item.q} className="border-2 border-ink bg-sheet px-4 py-3">
+              <summary className="cursor-pointer font-serif text-xl">{item.q}</summary>
+              <p className="mt-2 text-sm leading-6">{item.a}</p>
+            </details>
+          ))}
+        </div>
       </section>
     </article>
   );

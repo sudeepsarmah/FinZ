@@ -1,5 +1,6 @@
 import type { Cadence, Direction, Emotion, Risk, Timeline } from "@/lib/catalog";
 import type { Currency } from "@/lib/currency";
+import type { GemmaStatus } from "@/lib/model";
 
 export type Profile = {
   name: string;
@@ -50,7 +51,7 @@ export type Summary = {
   emotions: Array<{ slug: Emotion; count: number }>;
   dreams: Dream[];
   recent: Entry[];
-  model: { id: string; online: boolean };
+  model: GemmaStatus;
 };
 
 export type ParsedNote = {
